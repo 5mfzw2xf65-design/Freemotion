@@ -1,5 +1,6 @@
 import SwiftUI
 import PhotosUI
+import UIKit
 
 struct ContentView: View {
     @State private var photoItem: PhotosPickerItem?
@@ -20,7 +21,7 @@ struct ContentView: View {
                     PhotosPicker(selection: $photoItem, matching: .images) {
                         photoPickerCard
                     }
-                    .onChange(of: photoItem) { _, item in
+                    .onChange(of: photoItem) { item in
                         Task { await loadImage(from: item) }
                     }
 
@@ -61,7 +62,7 @@ struct ContentView: View {
                             .foregroundStyle(.secondary)
                     }
 
-                    Text("Bu derleme, iOS arayüzünü ve ComfyUI sağlık kontrolünü içerir. Wan 2.2 üretim düğmesi, doğrulanmış API workflow ve node eşlemesi bağlandıktan sonra etkinleştirilecektir.")
+                    Text("Bu sürüm iOS arayüzünü ve ComfyUI bağlantı kontrolünü içerir. Wan 2.2 video üretimi için gerçek API workflow dosyası ve node eşlemesi ayrıca bağlanmalıdır.")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                         .padding(14)
@@ -89,8 +90,7 @@ struct ContentView: View {
                     .background(accent.opacity(0.15), in: Capsule())
                     .foregroundStyle(accent)
             }
-            Text("Fotoğrafını
-hareketlendir.")
+            Text("Fotoğrafını\nhareketlendir.")
                 .font(.system(size: 34, weight: .bold, design: .rounded))
                 .lineSpacing(1)
             Text("Kendi model sunucuna bağlan.")
@@ -146,18 +146,22 @@ hareketlendir.")
 
     @MainActor
     private func checkConnection() async {
-        guard let base = URL(string: serverURL.trimmingCharacters(in: .whitespacesAndNewlines)),
-              let url = URL(string: "/system_stats", relativeTo: base) else {
-            connectionMessage = "Geçerli bir HTTPS sunucu adresi gir."
+        let address = serverURL.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let base = URL(string: address),
+              let scheme = base.scheme?.lowercased(),
+              ["https", "http"].contains(scheme),
+              base.host != nil else {
+            connectionMessage = "Geçerli bir sunucu adresi gir (tercihen HTTPS)."
             return
         }
 
+        let url = base.appendingPathComponent("system_stats")
         isChecking = true
         defer { isChecking = false }
 
         do {
             var request = URLRequest(url: url)
-            request.timeoutInterval = 12
+            request.timeoutInterval = 15
             let (_, response) = try await URLSession.shared.data(for: request)
             guard let http = response as? HTTPURLResponse else {
                 connectionMessage = "Sunucudan geçerli yanıt alınamadı."
