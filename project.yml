@@ -22,3 +22,5 @@ targets:
         INFOPLIST_KEY_NSPhotoLibraryUsageDescription: "FreeMotion video oluşturmak için seçtiğin fotoğrafa erişir."
         GENERATE_INFOPLIST_FILE: YES
         CODE_SIGN_STYLE: Automatic
+
+# CI trigger: verify the iOS app build on GitHub Actions.
